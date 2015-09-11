@@ -18,17 +18,45 @@
 
 package com.freshplanet.inapppurchase;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.util.Log;
 
 import com.adobe.fre.FREContext;
 import com.adobe.fre.FREExtension;
+import com.android.vending.billing.IInAppBillingService;
 
 public class Extension implements FREExtension
 {
 	private static String TAG = "AirInAppPurchase";
 	
 	public static ExtensionContext context;
-	
+	public static IInAppBillingService mService;
+	public static ServiceConnection mServiceConn;
+
+	public void initialize()
+	{
+		mServiceConn = new ServiceConnection() {
+			@Override
+			public void onServiceDisconnected(ComponentName name) {
+				mService = null;
+			}
+
+			@Override
+			public void onServiceConnected(ComponentName name,
+										   IBinder service) {
+				mService = IInAppBillingService.Stub.asInterface(service);
+			}
+		};
+
+		Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
+		serviceIntent.setPackage("com.android.vending");
+		context.getActivity().bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
+	}
+
 	public FREContext createContext(String extId)
 	{
 		return context = new ExtensionContext();
@@ -38,9 +66,7 @@ public class Extension implements FREExtension
 	{
 		context = null;
 	}
-	
-	public void initialize() {}
-	
+
 	public static void log(String message)
 	{
 		Log.d(TAG, message);

@@ -18,10 +18,15 @@
 
 package com.freshplanet.inapppurchase.functions;
 
+import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Intent;
 
+import android.os.Bundle;
+import android.os.RemoteException;
 import com.adobe.fre.FREContext;
 import com.adobe.fre.FREObject;
+import com.android.vending.billing.IInAppBillingService;
 import com.freshplanet.inapppurchase.Extension;
 import com.freshplanet.inapppurchase.activities.BillingActivity;
 
@@ -46,6 +51,32 @@ public class MakePurchaseFunction extends BaseFunction
 		i.putExtra("type", BillingActivity.MAKE_PURCHASE);
 		i.putExtra("purchaseId", purchaseId);
 		context.getActivity().startActivity(i);
+
+
+		String sku = getStringFromFREObject(args[0]);
+
+		final IInAppBillingService mService = Extension.mService;
+		final Activity appActivity = Extension.context.getActivity();
+
+		Bundle buyIntentBundle = null;
+		int response = -1;
+
+		try {
+
+			buyIntentBundle= mService.getBuyIntent(3, appActivity.getPackageName(), sku, "inapp", "bGoa+V7g/yqDXvKRqq+JTFn4uQZbPiQJo4pf9RzJ");
+			response = buyIntentBundle.getInt("RESPONSE_CODE");
+		}
+		catch (RemoteException exception) {}
+
+		if (response != 0) {
+
+			// error
+		}
+		else {
+
+			PendingIntent pendingIntent = buyIntentBundle.getParcelable("BUY_INTENT");
+		}
+
 
 		return null;
 	}

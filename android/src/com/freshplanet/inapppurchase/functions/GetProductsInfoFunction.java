@@ -18,43 +18,23 @@
 
 package com.freshplanet.inapppurchase.functions;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import android.app.Activity;
+import android.content.ServiceConnection;
+import android.os.Bundle;
+import android.os.RemoteException;
 import com.adobe.fre.FREArray;
 import com.adobe.fre.FREContext;
 import com.adobe.fre.FREObject;
+import com.android.vending.billing.IInAppBillingService;
 import com.freshplanet.inapppurchase.Extension;
-import com.freshplanet.inapppurchase.utils.IabHelper;
-import com.freshplanet.inapppurchase.utils.IabResult;
-import com.freshplanet.inapppurchase.utils.Inventory;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class GetProductsInfoFunction extends BaseFunction
 {
-    IabHelper.QueryInventoryFinishedListener listener = new IabHelper.QueryInventoryFinishedListener()
-    {
-        public void onQueryInventoryFinished(IabResult result, Inventory inventory)
-        {
-        	if (Extension.context == null)
-    		{
-    			Extension.log("Extension context is null");
-    			return;
-    		}
-        	
-        	if (result.isSuccess())
-    		{
-    			Extension.log("Query inventory successful");
-    			
-    			String data = inventory != null ? inventory.toString() : "";
-    	        Extension.context.dispatchStatusEventAsync("PRODUCT_INFO_RECEIVED", data) ;
-    		}
-    		else
-    		{
-    			Extension.log("Failed to query inventory: " + result.getMessage());
-    			Extension.context.dispatchStatusEventAsync("PRODUCT_INFO_ERROR", "ERROR");
-    		}
-        }
-    };
-
 	@Override
 	public FREObject call(FREContext context, FREObject[] args)
 	{
@@ -62,8 +42,54 @@ public class GetProductsInfoFunction extends BaseFunction
 		
 		List<String> skusName = getListOfStringFromFREArray((FREArray)args[0]);
 		List<String> skusSubsName = getListOfStringFromFREArray((FREArray)args[1]);
-		
-		Extension.context.getIabHelper().queryInventoryAsync(true , skusName, skusSubsName, listener);
+
+		ArrayList<String> skuList = new ArrayList<String>(skusName);
+		ArrayList<String> subsList = new ArrayList<String>(skusSubsName);
+
+		final Bundle querySkus = new Bundle();
+		querySkus.putStringArrayList("ITEM_ID_LIST", skuList);
+
+		final IInAppBillingService mService = Extension.mService;
+		final Activity appActivity = Extension.context.getActivity();
+		final ServiceConnection mServiceConn;
+
+		Thread thread = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+
+				Bundle skuDetails = null;
+				int response = -1;
+
+				try {
+
+					skuDetails = mService.getSkuDetails(3, appActivity.getPackageName(), "inapp", querySkus);
+					response = skuDetails.getInt("RESPONSE_CODE");
+				}
+				catch (RemoteException exception) {}
+
+				if (response != 0) {
+
+					// error
+				}
+				else {
+
+					ArrayList<String> responseList = skuDetails.getStringArrayList("DETAILS_LIST");
+
+					try {
+
+						for (String thisResponse : responseList) {
+
+							JSONObject productObject = new JSONObject(thisResponse);
+
+						}
+					}
+					catch (JSONException exception) {}
+				}
+			}
+		});
+
+		thread.start();
 		
 		return null;
 	}
