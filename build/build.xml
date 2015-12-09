@@ -85,7 +85,7 @@
             <regexpmapper from=".*src.(.*)\.as" to="\1"/>
         </pathconvert>
 
-        <exec executable="${air.sdk.home}/bin/compc" failonerror="true">
+        <exec executable="${air.sdk.home}/bin/compc${air.bin.extension}" failonerror="true">
             <env key="AIR_SDK_HOME" value="${air.sdk.home}"/>
             <arg line='-source-path ../actionscript/src'/>
             <arg line='-output temp/swc/${name}.swc'/>
@@ -104,7 +104,7 @@
 
     <!-- Package -->
     <target name="package" description="Create the extension package">
-        <exec executable="${air.sdk.home}/bin/adt" failonerror="true" dir="temp/">
+        <exec executable="${air.sdk.home}/bin/adt${air.bin.extension}" failonerror="true" dir="temp/">
             <arg value="-package"/>
             <arg value="-target"/>
             <arg value="ane"/>
