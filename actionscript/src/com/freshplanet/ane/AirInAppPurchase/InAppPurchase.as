@@ -65,6 +65,12 @@ package com.freshplanet.ane.AirInAppPurchase
 			{
 				trace("[InAppPurchase] init library");
 				extCtx.call("initLib", googlePlayKey, debug);
+				if (Capabilities.manufacturer.indexOf("iOS") > -1)
+				{
+					this.dispatchEvent(new InAppPurchaseEvent(InAppPurchaseEvent.INIT_SUCCESSFULL));
+				}
+			} else {
+				this.dispatchEvent(new InAppPurchaseEvent(InAppPurchaseEvent.INIT_ERROR, "InAppPurchase not supported"));
 			}
 		}
 		
@@ -199,6 +205,12 @@ package com.freshplanet.ane.AirInAppPurchase
 			var e:InAppPurchaseEvent;
 			switch(event.code)
 			{
+				case "INIT_SUCCESSFULL":
+					e = new InAppPurchaseEvent(InAppPurchaseEvent.INIT_SUCCESSFULL);
+					break;
+				case "INIT_ERROR":
+					e = new InAppPurchaseEvent(InAppPurchaseEvent.INIT_ERROR);
+					break;
 				case "PRODUCT_INFO_RECEIVED":
 					e = new InAppPurchaseEvent(InAppPurchaseEvent.PRODUCT_INFO_RECEIVED, event.level);
 					break;

@@ -24,6 +24,9 @@ package com.freshplanet.ane.AirInAppPurchase
 	{
 		
 		// init -> check if previously purchases not being processed by the app
+		public static const INIT_SUCCESSFULL:String = "initSuccesfull";
+		public static const INIT_ERROR:String   	= "initError";
+
 		public static const PURCHASE_SUCCESSFULL:String = "purchaseSuccesfull";
 		public static const PURCHASE_ERROR:String   	= "purchaseError";
 		
