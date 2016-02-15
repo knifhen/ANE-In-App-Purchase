@@ -92,17 +92,26 @@ void *AirInAppRefToSelf;
     
     [dictionary setObject:productElement forKey:@"details"];
     
-    
-    NSString* jsonDictionary = [dictionary JSONString];
-    
-    FREDispatchStatusEventAsync(AirInAppCtx ,(uint8_t*) "PRODUCT_INFO_RECEIVED", (uint8_t*) [jsonDictionary UTF8String] );
-    
-    if ([response invalidProductIdentifiers] != nil && [[response invalidProductIdentifiers] count] > 0)
-    {
-        NSString* jsonArray = [[response invalidProductIdentifiers] JSONString];
+    NSError *error;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dictionary
+                                                       options:NSJSONWritingPrettyPrinted // Pass 0 if you don't care about the readability of the generated string
+                                                         error:&error];
+
+    if (! jsonData) {
+        NSLog(@"Got an error: %@", error);
+    } else {
+        NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+
+        FREDispatchStatusEventAsync(AirInAppCtx ,(uint8_t) "PRODUCT_INFO_RECEIVED", (uint8_t) [jsonString UTF8String] );
         
-        FREDispatchStatusEventAsync(AirInAppCtx ,(uint8_t*) "PRODUCT_INFO_ERROR", (uint8_t*) [jsonArray UTF8String] );
-        
+        if ([response invalidProductIdentifiers] != nil && [[response invalidProductIdentifiers] count] > 0)
+        {
+            NSString* jsonArray = [[response invalidProductIdentifiers] JSONString];
+            
+            FREDispatchStatusEventAsync(AirInAppCtx ,(uint8_t) "PRODUCT_INFO_ERROR", (uint8_t) [jsonArray UTF8String] );
+            
+        }
+        FREDispatchStatusEventAsync(AirInAppCtx ,(uint8_t) "DEBUG", (uint8_t) [@"PRODUCTS RECEIVED ENDING" UTF8String] );
     }
 }
 
