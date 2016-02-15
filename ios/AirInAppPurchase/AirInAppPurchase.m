@@ -54,6 +54,17 @@ void *AirInAppRefToSelf;
     [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
 }
 
++ (void)log:(NSString *)format, ... {
+    @try {
+        va_list args;
+        va_start(args, format);
+        NSString *string = [[NSString alloc] initWithFormat:format arguments:args];
+        NSLog(@"[AirInAppPurchase] %@", string);
+    }
+    @catch (NSException *exception) {
+        NSLog(@"[AirInAppPurchase] Couldn't log message. Exception: %@", exception);
+    }
+}
 
 //////////////////////////////////////////////////////////////////////////////////////
 // PRODUCT INFO
@@ -89,8 +100,12 @@ void *AirInAppRefToSelf;
         [details setValue: product.price forKey:@"value"];
         [productElement setObject:details forKey:product.productIdentifier];
     }
-    
+
+    [AirInAppPurchase log:@"set details"];
+    // FREDispatchStatusEventAsync(AirInAppCtx ,(uint8_t) "DEBUG", (uint8_t) [@"set details" UTF8String] );
+    [AirInAppPurchase log:@"set elements %@", productElement];
     [dictionary setObject:productElement forKey:@"details"];
+    [AirInAppPurchase log:@"create json"];
     
     NSError *error;
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dictionary
@@ -101,17 +116,21 @@ void *AirInAppRefToSelf;
         NSLog(@"Got an error: %@", error);
     } else {
         NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-
-        FREDispatchStatusEventAsync(AirInAppCtx ,(uint8_t) "PRODUCT_INFO_RECEIVED", (uint8_t) [jsonString UTF8String] );
+        
+        [AirInAppPurchase log:@"PRODUCT_INFO_RECEIVED %@", jsonString];
+        FREDispatchStatusEventAsync(AirInAppCtx ,(uint8_t*) "PRODUCT_INFO_RECEIVED", (uint8_t*) [jsonString UTF8String] );
         
         if ([response invalidProductIdentifiers] != nil && [[response invalidProductIdentifiers] count] > 0)
         {
             NSString* jsonArray = [[response invalidProductIdentifiers] JSONString];
             
-            FREDispatchStatusEventAsync(AirInAppCtx ,(uint8_t) "PRODUCT_INFO_ERROR", (uint8_t) [jsonArray UTF8String] );
+            [AirInAppPurchase log:@"PRODUCT_INFO_ERROR"];
+            FREDispatchStatusEventAsync(AirInAppCtx ,(uint8_t*) "PRODUCT_INFO_ERROR", (uint8_t*) [jsonArray UTF8String] );
             
         }
-        FREDispatchStatusEventAsync(AirInAppCtx ,(uint8_t) "DEBUG", (uint8_t) [@"PRODUCTS RECEIVED ENDING" UTF8String] );
+        
+        [AirInAppPurchase log:@"PRODUCTS RECEIVED ENDING"];
+        // FREDispatchStatusEventAsync(AirInAppCtx ,(uint8_t) "DEBUG", (uint8_t) [@"PRODUCTS RECEIVED ENDING" UTF8String] );
     }
 }
 
